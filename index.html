@@ -717,6 +717,18 @@ function somAlerta(){somAlertaDuplo();if(navigator.vibrate)navigator.vibrate([15
 function safeFocus(el){if(!el)return;el.focus()}
 var _userTapping=false;
 document.addEventListener('touchstart',function(){_userTapping=true;setTimeout(function(){_userTapping=false},400)},{passive:true});
+// iOS: quando o input já tem foco programático, tap não abre teclado.
+// Solução: blur→focus dentro do gesto do usuário força o teclado a abrir.
+function forceKeyboard(el){
+  el.addEventListener('touchend',function(e){
+    if(document.activeElement===el){el.blur();setTimeout(function(){el.focus()},10)}
+  });
+}
+forceKeyboard(document.getElementById('scanLivre'));
+forceKeyboard(document.getElementById('scanConf'));
+forceKeyboard(document.getElementById('scanDiaria'));
+forceKeyboard(document.getElementById('scanLoc'));
+forceKeyboard(document.getElementById('scanRoupa'));
 
 // Validar código
 function codInvalido(cod){return cod.indexOf('-')!==-1}
