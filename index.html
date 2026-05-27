@@ -787,6 +787,14 @@ function verificarCatalogo(cod){
       return;
     }
     var r=typeof res==='string'?{desc:res,loc:''}:res;
+    // Atualizar desc e loc do item na contagem (vindo do IndexedDB)
+    var c=db.c[cur];
+    if(c&&c.itens[cod]){
+      var changed=false;
+      if(r.desc&&!c.itens[cod].desc){c.itens[cod].desc=r.desc;changed=true}
+      if(r.loc&&!c.itens[cod].loc){c.itens[cod].loc=r.loc;changed=true}
+      if(changed){saveDB();if(c.modo==='livre')renderLivre();else if(c.modo==='diaria')renderDiaria();else if(c.modo==='locacao')renderLocCont();else if(c.modo==='roupa')renderRoupa()}
+    }
     if(semLocal(r.loc)){
       somAlertaDuplo();
       toast('⚠ '+cod+' sem localização no catálogo');
