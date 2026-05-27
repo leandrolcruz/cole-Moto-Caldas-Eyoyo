@@ -82,6 +82,7 @@
   .empty-msg{text-align:center;padding:20px;color:var(--tx3);font-size:13px}
   .scan-area{padding:12px 16px;background:linear-gradient(180deg,var(--ac-dim) 0%,transparent 100%);flex-shrink:0}
   .scan-row{display:flex;gap:8px;align-items:center}
+  .kb-btn{background:var(--s2);border:2px solid var(--ac);border-radius:var(--r);color:var(--ac);font-size:22px;padding:10px 14px;cursor:pointer;flex-shrink:0;line-height:1}
   .scan-input{flex:1;background:var(--bg);border:2px solid var(--ac);border-radius:var(--r);padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--tx);text-align:center;outline:none;box-shadow:0 0 20px var(--ac-glow)}
   .scan-input:focus{box-shadow:0 0 30px var(--ac-glow),0 0 60px rgba(224,62,62,.08)}
   .scan-input::placeholder{color:var(--tx3);font-size:13px;font-weight:400}
@@ -263,6 +264,7 @@
   <div class="scan-area">
     <div class="scan-row">
       <input type="text" class="scan-input" id="scanDiaria" placeholder="Bipe o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="kb-btn" onclick="abrirDigitar('diaria')">⌨</button>
     </div>
     <div class="scan-fb" id="fbDiaria"></div>
   </div>
@@ -289,6 +291,7 @@
   <div class="scan-area">
     <div class="scan-row">
       <input type="text" class="scan-input" id="scanLivre" placeholder="Bipe o código de barras" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="kb-btn" onclick="abrirDigitar('livre')">⌨</button>
     </div>
     <div class="scan-fb" id="fbLivre"></div>
   </div>
@@ -388,6 +391,7 @@
   <div class="scan-area">
     <div class="scan-row">
       <input type="text" class="scan-input" id="scanLoc" placeholder="Bipe o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="kb-btn" onclick="abrirDigitar('locacao')">⌨</button>
     </div>
     <div class="scan-fb" id="fbLoc"></div>
   </div>
@@ -434,6 +438,7 @@
   <div class="scan-area">
     <div class="scan-row">
       <input type="text" class="scan-input" id="scanRoupa" placeholder="Bipe o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="kb-btn" onclick="abrirDigitar('roupa')">⌨</button>
     </div>
     <div class="scan-fb" id="fbRoupa"></div>
   </div>
@@ -476,6 +481,7 @@
   <div class="scan-area">
     <div class="scan-row">
       <input type="text" class="scan-input" id="scanConf" placeholder="Bipe o código de barras" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="kb-btn" onclick="abrirDigitar('conferencia')">⌨</button>
     </div>
     <div class="scan-fb" id="fbConf"></div>
   </div>
@@ -617,6 +623,16 @@
 </div></div>
 
 
+<!-- Modal: digitar código manualmente -->
+<div class="modal-ov" id="modDigitar"><div class="modal">
+  <h3>Digitar Código</h3>
+  <input type="text" id="modDigitarInput" class="scan-input" placeholder="Digite o código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="margin:12px 0;font-size:18px">
+  <div class="ma">
+    <button class="btn btn-sf" onclick="closeM('modDigitar')">Cancelar</button>
+    <button class="btn btn-ac" onclick="confirmarDigitar()">Bipar</button>
+  </div>
+</div></div>
+
 <!-- Modal: cor e tamanho da roupa -->
 <div class="modal-ov" id="modCorTam"><div class="modal">
   <h3 id="modCorTamTit">Registrar Roupa</h3>
@@ -734,6 +750,30 @@ forceKeyboard(document.getElementById('scanConf'));
 forceKeyboard(document.getElementById('scanDiaria'));
 forceKeyboard(document.getElementById('scanLoc'));
 forceKeyboard(document.getElementById('scanRoupa'));
+
+// ===== DIGITAR CÓDIGO MANUALMENTE =====
+var _digitarModo='';
+function abrirDigitar(modo){
+  _digitarModo=modo;
+  var inp=document.getElementById('modDigitarInput');
+  inp.value='';
+  openM('modDigitar');
+  setTimeout(function(){inp.focus()},300);
+}
+function confirmarDigitar(){
+  var cod=document.getElementById('modDigitarInput').value.trim();
+  if(!cod)return;
+  closeM('modDigitar');
+  // Injetar código no scan input do modo correto e disparar bipe
+  var scanMap={livre:'scanLivre',conferencia:'scanConf',diaria:'scanDiaria',locacao:'scanLoc',roupa:'scanRoupa'};
+  var scanId=scanMap[_digitarModo];
+  if(!scanId)return;
+  var scanEl=document.getElementById(scanId);
+  scanEl.value=cod;
+  // Disparar o bipe correspondente
+  var bipeMap={livre:bipeLivre,conferencia:bipeConf,diaria:bipeDiaria,locacao:bipeLoc,roupa:bipeRoupa};
+  if(bipeMap[_digitarModo])bipeMap[_digitarModo]();
+}
 
 // Validar código
 function codInvalido(cod){return cod.indexOf('-')!==-1}
