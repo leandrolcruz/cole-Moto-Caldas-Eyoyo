@@ -98,6 +98,7 @@
   .item-code{flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;word-break:break-all}
   .item-loc{font-size:11px;color:var(--tx2);min-width:50px;text-align:center}
   .item-qty{min-width:35px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--ac)}
+  .item-desc{flex:2;font-size:10px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item-saldo{min-width:35px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tx3)}
   .item-hdr{font-weight:700;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-bottom:1px solid var(--bd)}
   .item-hdr .item-qty,.item-hdr .item-saldo{font-size:10px;color:var(--tx3)}
@@ -878,14 +879,15 @@ function renderConf(codDestaque){
   document.getElementById('scSemLoc').textContent=sl;
   var filtro=(document.getElementById('filtroConf')?document.getElementById('filtroConf').value:'').toUpperCase().trim();
   var el=document.getElementById('confItems');
-  var h='<div class="item-row item-hdr"><span class="item-code">Código</span><span class="item-loc">Local</span><span class="item-qty">Qtd</span></div>';
+  var h='<div class="item-row item-hdr"><span class="item-code">Código</span><span class="item-desc">Descrição</span><span class="item-loc">Local</span><span class="item-qty">Qtd</span></div>';
   var ord=c.ordem.slice().reverse();
   for(var i=0;i<ord.length;i++){
     var cod=ord[i],it=c.itens[cod];
     if(filtro&&cod.toUpperCase().indexOf(filtro)===-1)continue;
     var flash=cod===codDestaque?' item-flash':'';
     var locTxt=it.loc||'<span style="color:var(--or)">SEM LOCAL</span>';
-    h+='<div class="item-row'+flash+'" id="rowc-'+cod+'" onclick="verDescPeca(\''+cod.replace(/'/g,"\\'")+'\')" style="cursor:pointer"><span class="item-code">'+cod+'</span><span class="item-loc">'+locTxt+'</span><span class="item-qty">'+it.qtd+'</span></div>';
+    var descTxt=it.desc||'';
+    h+='<div class="item-row'+flash+'" id="rowc-'+cod+'" onclick="verDescPeca(\''+cod.replace(/'/g,"\\'")+'\')" style="cursor:pointer"><span class="item-code">'+cod+'</span><span class="item-desc">'+descTxt+'</span><span class="item-loc">'+locTxt+'</span><span class="item-qty">'+it.qtd+'</span></div>';
   }
   el.innerHTML=h;
   if(codDestaque){var row=document.getElementById('rowc-'+codDestaque);if(row)row.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -921,13 +923,14 @@ function bipeConf(){
   if(c.itens[cod]){
     ultimoBipe={modo:'conferencia',cod:cod,qtdAntes:c.itens[cod].qtd,era_novo:false};
     c.itens[cod].qtd++;
-    fb.textContent='✓ +1 → '+cod+' = '+c.itens[cod].qtd;fb.className='scan-fb fb-add';somConfirmacao();
+    var dsc=c.itens[cod].desc;fb.textContent='✓ +1 → '+cod+(dsc?' — '+dsc:'')+' = '+c.itens[cod].qtd;fb.className='scan-fb fb-add';somConfirmacao();
   }else{
     var loc=base[cod]?base[cod].loc||'':'';
-    c.itens[cod]={qtd:1,desc:base[cod]?base[cod].desc||'':'',loc:loc};
+    var desc0=base[cod]?base[cod].desc||'':'';
+    c.itens[cod]={qtd:1,desc:desc0,loc:loc};
     if(c.ordem.indexOf(cod)===-1)c.ordem.push(cod);
     ultimoBipe={modo:'conferencia',cod:cod,qtdAntes:0,era_novo:true};
-    fb.textContent='★ Novo → '+cod+(loc?' ('+loc+')':' [SEM LOCAL]');fb.className='scan-fb fb-new';somConfirmacao();
+    fb.textContent='★ Novo → '+cod+(desc0?' — '+desc0:'')+(loc?' ('+loc+')':' [SEM LOCAL]');fb.className='scan-fb fb-new';somConfirmacao();
   }
   saveDB();renderConf(cod);scanC.value='';safeFocus(scanC);
   // Buscar localização do catálogo caso base não tenha
@@ -950,7 +953,7 @@ function abrirRelConf(idx){
   var sl=0;for(var k in c.itens){if(semLocal(c.itens[k].loc))sl++}
   document.getElementById('rcSemLoc').textContent=sl;
   var el=document.getElementById('relConfItems');
-  var h='<div class="item-row item-hdr"><span class="item-code">Código</span><span class="item-loc">Local</span><span class="item-qty">Qtd</span></div>';
+  var h='<div class="item-row item-hdr"><span class="item-code">Código</span><span class="item-desc">Descrição</span><span class="item-loc">Local</span><span class="item-qty">Qtd</span></div>';
   // Ordenar por localização
   var sorted=c.ordem.slice().sort(function(a,b){
     var la=(c.itens[a].loc||'ZZZ').toUpperCase(),lb=(c.itens[b].loc||'ZZZ').toUpperCase();
@@ -959,7 +962,8 @@ function abrirRelConf(idx){
   for(var i=0;i<sorted.length;i++){
     var cod=sorted[i],it=c.itens[cod];
     var locTxt=it.loc||'<span style="color:var(--or)">SEM LOCAL</span>';
-    h+='<div class="item-row" onclick="verDescPeca(\''+cod.replace(/'/g,"\\'")+'\')" style="cursor:pointer"><span class="item-code">'+cod+'</span><span class="item-loc">'+locTxt+'</span><span class="item-qty">'+it.qtd+'</span></div>';
+    var descTxt=it.desc||'';
+    h+='<div class="item-row" onclick="verDescPeca(\''+cod.replace(/'/g,"\\'")+'\')" style="cursor:pointer"><span class="item-code">'+cod+'</span><span class="item-desc">'+descTxt+'</span><span class="item-loc">'+locTxt+'</span><span class="item-qty">'+it.qtd+'</span></div>';
   }
   el.innerHTML=h;
 }
