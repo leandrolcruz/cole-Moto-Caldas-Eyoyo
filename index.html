@@ -211,6 +211,7 @@
       <div class="mode-card c-or" onclick="abrirDiaria()"><div class="ci">📊</div><div class="mc-text"><h3>Contagem Diária</h3><p>Importe a planilha de saída do Microwork. Confira saldo por localização.</p></div></div>
       <div class="mode-card c-bl" onclick="abrirLocacao()"><div class="ci">📍</div><div class="mc-text"><h3>Contagem por Locação</h3><p>Importe planilha de localização. Conte por corredor, estante e prateleira.</p></div></div>
       <div class="mode-card c-pp" onclick="abrirRoupas()"><div class="ci">👕</div><div class="mc-text"><h3>Contagem de Roupas</h3><p>Bipe o código e registre cor e tamanho. Duas contagens com conferente.</p></div></div>
+      <div class="mode-card c-gn" onclick="novaConferencia()"><div class="ci">🔍</div><div class="mc-text"><h3>Conferência</h3><p>Bipe livremente. O relatório identifica a localização de cada peça no catálogo.</p></div></div>
     </div>
     <div id="resumoGeral"></div>
     <div id="catalogoStatus"></div>
@@ -464,11 +465,61 @@
   </div>
 </div>
 
+<!-- CONFERÊNCIA -->
+<div class="screen" id="scrConf">
+  <div class="inv-topbar">
+    <button class="back" onclick="confirmSair()">←</button>
+    <div class="inv-title"><h2 id="confTit">Conferência</h2><p id="confSub"></p></div>
+    <span class="badge badge-gn">CONFERÊNCIA</span>
+  </div>
+  <div class="scan-area">
+    <div class="scan-row">
+      <input type="text" class="scan-input" id="scanConf" placeholder="Bipe o código de barras" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="scan-fb" id="fbConf"></div>
+  </div>
+  <div class="stats-bar">
+    <div class="st-chip"><div class="n gn" id="scItens">0</div><div class="l">Itens</div></div>
+    <div class="st-chip"><div class="n red" id="scBipes">0</div><div class="l">Bipes</div></div>
+    <div class="st-chip"><div class="n or" id="scSemLoc">0</div><div class="l">Sem Local</div></div>
+    <button class="undo-btn" onclick="desfazerBipe()">↩</button>
+  </div>
+  <div class="filter-bar"><input class="filter-input" id="filtroConf" placeholder="🔍 Filtrar código..." oninput="renderConf()"></div>
+  <div class="items-list" id="confItems"></div>
+  <div class="bbar">
+    <button class="btn btn-sf" style="flex:1" onclick="confirmSair()">💾 Salvar</button>
+    <button class="btn btn-ac" style="flex:1" onclick="confirmConcluir()">✅ Concluir</button>
+  </div>
+</div>
+
+<!-- CONFERÊNCIA: RELATÓRIO -->
+<div class="screen" id="scrRelConf">
+  <div class="inv-topbar">
+    <button class="back" onclick="goHome()">←</button>
+    <div class="inv-title"><h2>Relatório da Conferência</h2><p id="relConfSub"></p></div>
+  </div>
+  <div class="stats-bar" style="padding-top:10px">
+    <div class="st-chip"><div class="n gn" id="rcItens">0</div><div class="l">Itens</div></div>
+    <div class="st-chip"><div class="n red" id="rcBipes">0</div><div class="l">Bipes</div></div>
+    <div class="st-chip"><div class="n or" id="rcSemLoc">0</div><div class="l">Sem Local</div></div>
+  </div>
+  <div class="items-list" id="relConfItems" style="padding-bottom:80px"></div>
+  <div class="bbar">
+    <button class="btn btn-gn" style="flex:1" onclick="exportarConferencia()">📤 Exportar .XLSX</button>
+  </div>
+</div>
+
 <!-- MODAIS -->
 <div class="modal-ov" id="modNova"><div class="modal">
   <h3>Nova Contagem Livre</h3>
   <label>Nome</label><input type="text" id="inpNome" placeholder="Ex: Inventário Peças Abril/2026">
   <div class="ma"><button class="btn btn-sf" onclick="closeM('modNova')">Cancelar</button><button class="btn btn-ac" onclick="criarLivre()">Criar</button></div>
+</div></div>
+
+<div class="modal-ov" id="modNovaConf"><div class="modal">
+  <h3>Nova Conferência</h3>
+  <label>Nome</label><input type="text" id="inpNomeConf" placeholder="Ex: Conferência Corredor A">
+  <div class="ma"><button class="btn btn-sf" onclick="closeM('modNovaConf')">Cancelar</button><button class="btn btn-gn" onclick="criarConferencia()">Criar</button></div>
 </div></div>
 
 <div class="modal-ov" id="modSair"><div class="modal">
@@ -704,7 +755,7 @@ function renderHome(){
   var h='';
   for(var i=n-1;i>=0;i--){
     var c=db.c[i],ic=Object.keys(c.itens).length,sc=c.status==='ok'?'sts-ok':'sts-and',st=c.status==='ok'?'Concluída':'Em andamento';
-    var tipo=c.modo==='diaria'?(c.numContagem===2?'2ª':'1ª')+' DIÁRIA':c.modo==='locacao'?'📍 '+(c.numContagem===2?'2ª':'1ª')+' CONT.':c.modo==='roupa'?'👕 '+(c.numContagem===2?'2ª':'1ª')+' ROUPA':'LIVRE';
+    var tipo=c.modo==='diaria'?(c.numContagem===2?'2ª':'1ª')+' DIÁRIA':c.modo==='locacao'?'📍 '+(c.numContagem===2?'2ª':'1ª')+' CONT.':c.modo==='roupa'?'👕 '+(c.numContagem===2?'2ª':'1ª')+' ROUPA':c.modo==='conferencia'?'🔍 CONFERÊNCIA':'LIVRE';
     var conf=c.conferente?' • '+c.conferente:'';
     h+='<div class="c-item"><div class="c-info" onclick="abrirC('+i+')"><h4>'+c.nome+'</h4><p>'+tipo+conf+' • '+c.data+' • '+c.totalBipes+' bipes</p></div><div class="c-meta"><div class="cnt" onclick="abrirC('+i+')">'+ic+'</div><div class="sts '+sc+'" onclick="abrirC('+i+')">'+st+'</div><button class="del-btn" onclick="event.stopPropagation();delContagem('+i+')">🗑</button></div></div>';
   }
@@ -799,6 +850,155 @@ function bipeLivre(){
   }
   saveDB();renderLivre(cod);scanL.value='';safeFocus(scanL);
   verificarCatalogo(cod);
+}
+
+// ===== CONFERÊNCIA =====
+function novaConferencia(){openM('modNovaConf')}
+function criarConferencia(){
+  var nome=document.getElementById('inpNomeConf').value.trim()||'Conferência '+(db.c.length+1);
+  db.c.push({nome:nome,modo:'conferencia',data:now(),status:'and',itens:{},ordem:[],totalBipes:0});
+  saveDB();closeM('modNovaConf');document.getElementById('inpNomeConf').value='';
+  cur=db.c.length-1;abrirConferencia();
+}
+function abrirConferencia(){
+  var c=db.c[cur];show('scrConf');
+  document.getElementById('confTit').textContent=c.nome;
+  document.getElementById('confSub').textContent=c.data;
+  if(document.getElementById('filtroConf'))document.getElementById('filtroConf').value='';
+  renderConf();
+  var inp=document.getElementById('scanConf');inp.value='';setTimeout(function(){safeFocus(inp)},200);
+}
+function renderConf(codDestaque){
+  var c=db.c[cur];
+  document.getElementById('scItens').textContent=Object.keys(c.itens).length;
+  document.getElementById('scBipes').textContent=c.totalBipes;
+  var sl=0;for(var k in c.itens){if(semLocal(c.itens[k].loc))sl++}
+  document.getElementById('scSemLoc').textContent=sl;
+  var filtro=(document.getElementById('filtroConf')?document.getElementById('filtroConf').value:'').toUpperCase().trim();
+  var el=document.getElementById('confItems');
+  var h='<div class="item-row item-hdr"><span class="item-code">Código</span><span class="item-loc">Local</span><span class="item-qty">Qtd</span></div>';
+  var ord=c.ordem.slice().reverse();
+  for(var i=0;i<ord.length;i++){
+    var cod=ord[i],it=c.itens[cod];
+    if(filtro&&cod.toUpperCase().indexOf(filtro)===-1)continue;
+    var flash=cod===codDestaque?' item-flash':'';
+    var locTxt=it.loc||'<span style="color:var(--or)">SEM LOCAL</span>';
+    h+='<div class="item-row'+flash+'" id="rowc-'+cod+'" onclick="verDescPeca(\''+cod.replace(/'/g,"\\'")+'\')" style="cursor:pointer"><span class="item-code">'+cod+'</span><span class="item-loc">'+locTxt+'</span><span class="item-qty">'+it.qtd+'</span></div>';
+  }
+  el.innerHTML=h;
+  if(codDestaque){var row=document.getElementById('rowc-'+codDestaque);if(row)row.scrollIntoView({behavior:'smooth',block:'center'})}
+}
+
+// Scanner conferência
+var scanC=document.getElementById('scanConf'),timerC=null;
+var scanCBlocked=false;
+scanC.addEventListener('blur',function(){
+  if(!document.getElementById('scrConf').classList.contains('active')||scanCBlocked)return;
+  setTimeout(function(){
+    if(_userTapping||scanCBlocked)return;
+    var af=document.activeElement;
+    if(!af||af.id==='filtroConf'||af.closest('.modal')||af.tagName==='SELECT'||af.tagName==='INPUT'&&af!==scanC)return;
+    safeFocus(scanC);
+  },400);
+});
+var filtroC=document.getElementById('filtroConf');
+if(filtroC){
+  filtroC.addEventListener('focus',function(){scanCBlocked=true});
+  filtroC.addEventListener('blur',function(){scanCBlocked=false;setTimeout(function(){safeFocus(scanC)},100)});
+}
+scanC.addEventListener('keydown',function(e){if(e.key==='Tab'||e.key==='Enter'){e.preventDefault();if(timerC){clearTimeout(timerC);timerC=null}bipeConf()}});
+scanC.addEventListener('input',function(){if(timerC)clearTimeout(timerC);if(scanC.value.trim().length>0)timerC=setTimeout(bipeConf,SCAN_DEBOUNCE)});
+
+function bipeConf(){
+  if(cur===null)return;var c=db.c[cur];
+  if(c.status==='ok'){toast('Conferência concluída');scanC.value='';return}
+  var cod=scanC.value.replace(/[\t\n\r]/g,'').trim();if(!cod)return;
+  var fb=document.getElementById('fbConf');
+  if(codInvalido(cod)){fb.textContent='✗ Etiqueta fora do padrão: '+cod;fb.className='scan-fb';fb.style.color='var(--dg)';somErro();scanC.value='';safeFocus(scanC);setTimeout(function(){fb.style.color=''},3000);return}
+  c.totalBipes++;
+  if(c.itens[cod]){
+    ultimoBipe={modo:'conferencia',cod:cod,qtdAntes:c.itens[cod].qtd,era_novo:false};
+    c.itens[cod].qtd++;
+    fb.textContent='✓ +1 → '+cod+' = '+c.itens[cod].qtd;fb.className='scan-fb fb-add';somConfirmacao();
+  }else{
+    var loc=base[cod]?base[cod].loc||'':'';
+    c.itens[cod]={qtd:1,desc:base[cod]?base[cod].desc||'':'',loc:loc};
+    if(c.ordem.indexOf(cod)===-1)c.ordem.push(cod);
+    ultimoBipe={modo:'conferencia',cod:cod,qtdAntes:0,era_novo:true};
+    fb.textContent='★ Novo → '+cod+(loc?' ('+loc+')':' [SEM LOCAL]');fb.className='scan-fb fb-new';somConfirmacao();
+  }
+  saveDB();renderConf(cod);scanC.value='';safeFocus(scanC);
+  // Buscar localização do catálogo caso base não tenha
+  if(!c.itens[cod].loc){
+    buscarCatalogo(cod,function(res){
+      if(!res)return;
+      var r=typeof res==='string'?{desc:res,loc:''}:res;
+      if(r.loc){c.itens[cod].loc=r.loc;saveDB();renderConf()}
+      if(r.desc&&!c.itens[cod].desc){c.itens[cod].desc=r.desc;saveDB()}
+    });
+  }
+}
+
+// Relatório conferência
+function abrirRelConf(idx){
+  cur=idx;var c=db.c[idx];show('scrRelConf');
+  document.getElementById('relConfSub').textContent=c.nome+' — '+c.data;
+  document.getElementById('rcItens').textContent=Object.keys(c.itens).length;
+  document.getElementById('rcBipes').textContent=c.totalBipes;
+  var sl=0;for(var k in c.itens){if(semLocal(c.itens[k].loc))sl++}
+  document.getElementById('rcSemLoc').textContent=sl;
+  var el=document.getElementById('relConfItems');
+  var h='<div class="item-row item-hdr"><span class="item-code">Código</span><span class="item-loc">Local</span><span class="item-qty">Qtd</span></div>';
+  // Ordenar por localização
+  var sorted=c.ordem.slice().sort(function(a,b){
+    var la=(c.itens[a].loc||'ZZZ').toUpperCase(),lb=(c.itens[b].loc||'ZZZ').toUpperCase();
+    return la<lb?-1:la>lb?1:0;
+  });
+  for(var i=0;i<sorted.length;i++){
+    var cod=sorted[i],it=c.itens[cod];
+    var locTxt=it.loc||'<span style="color:var(--or)">SEM LOCAL</span>';
+    h+='<div class="item-row" onclick="verDescPeca(\''+cod.replace(/'/g,"\\'")+'\')" style="cursor:pointer"><span class="item-code">'+cod+'</span><span class="item-loc">'+locTxt+'</span><span class="item-qty">'+it.qtd+'</span></div>';
+  }
+  el.innerHTML=h;
+}
+
+// Exportar conferência
+function exportarConferencia(){
+  var c=db.c[cur];if(!c)return;
+  toast('Preparando exportação...');
+  var codigos=[];
+  for(var i=0;i<c.ordem.length;i++){
+    var cod=c.ordem[i],it=c.itens[cod];
+    if(!it||it.qtd===null||it.qtd===0)continue;
+    codigos.push(cod);
+  }
+  abrirCatDB(function(db2){
+    var catInfo={};
+    var tx=db2.transaction('pecas','readonly');
+    var store=tx.objectStore('pecas');
+    codigos.forEach(function(cod){
+      var req=store.get(cod);
+      req.onsuccess=function(){if(req.result){var r=typeof req.result==='string'?{desc:req.result,loc:''}:req.result;catInfo[cod]=r}};
+    });
+    tx.oncomplete=function(){
+      var dados=[];
+      for(var i=0;i<codigos.length;i++){
+        var cod=codigos[i],it=c.itens[cod];
+        var ci=catInfo[cod]||{};
+        var desc=it.desc||ci.desc||(base[cod]?base[cod].desc:'')||'';
+        var loc=it.loc||ci.loc||(base[cod]?base[cod].loc:'')||'';
+        dados.push({'Código':cod,'Descrição':desc,'Quantidade':it.qtd,'Localização':loc,'Sem Local':semLocal(loc)?'Sim':'Não'});
+      }
+      // Ordenar por localização
+      dados.sort(function(a,b){
+        var la=(a['Localização']||'ZZZ').toUpperCase(),lb=(b['Localização']||'ZZZ').toUpperCase();
+        return la<lb?-1:la>lb?1:0;
+      });
+      var ws=XLSX.utils.json_to_sheet(dados);ws['!cols']=[{wch:16},{wch:30},{wch:12},{wch:14},{wch:10}];
+      var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Conferência');
+      exportarXLSX(wb,'Conferencia-'+c.nome.replace(/[^a-zA-Z0-9]/g,'-')+'-'+c.data.replace(/[\/:]/g,'-')+'.xlsx');
+    };
+  });
 }
 
 // ===== CONTAGEM DIÁRIA =====
@@ -976,6 +1176,7 @@ function abrirC(idx){
     abrirContLocTela();return;
   }
   if(c.modo==='roupa'){if(c.status==='ok'){abrirRelRoupa(idx);return}abrirRoupaConf();return}
+  if(c.modo==='conferencia'){if(c.status==='ok'){abrirRelConf(idx);return}abrirConferencia();return}
   if(c.modo==='diaria'){if(c.status==='ok'){abrirRelatorio(idx);return}abrirDiariaConf()}
   else{if(c.status==='ok'){abrirRelLivre(idx);return}abrirLivre()}
 }
@@ -985,7 +1186,7 @@ function confirmSair(){openM('modSair')}
 function salvarSair(){saveDB();closeM('modSair');cur=null;goHome();toast('Contagem salva')}
 function sairSemSalvar(){closeM('modSair');cur=null;goHome();toast('Saiu sem salvar')}
 function confirmConcluir(){openM('modConcluir')}
-function concluir(){db.c[cur].status='ok';saveDB();closeM('modConcluir');toast('Contagem concluída!');if(db.c[cur].modo==='diaria'){abrirRelatorio(cur)}else if(db.c[cur].modo==='livre'){abrirRelLivre(cur)}else if(db.c[cur].modo==='roupa'){abrirRelRoupa(cur)}else{goHome()}}
+function concluir(){db.c[cur].status='ok';saveDB();closeM('modConcluir');toast('Contagem concluída!');if(db.c[cur].modo==='diaria'){abrirRelatorio(cur)}else if(db.c[cur].modo==='livre'){abrirRelLivre(cur)}else if(db.c[cur].modo==='conferencia'){abrirRelConf(cur)}else if(db.c[cur].modo==='roupa'){abrirRelRoupa(cur)}else{goHome()}}
 
 // ===== RELATÓRIO LIVRE =====
 function abrirRelLivre(idx){
@@ -1560,7 +1761,7 @@ function desfazerBipe(){
   if(ub.era_novo){delete c.itens[ub.cod];var idx=c.ordem.indexOf(ub.cod);if(idx>-1)c.ordem.splice(idx,1);if(c.extras){var ei=c.extras.indexOf(ub.cod);if(ei>-1)c.extras.splice(ei,1)}}
   else{c.itens[ub.cod].qtd=ub.qtdAntes}
   c.totalBipes=Math.max(0,c.totalBipes-1);saveDB();toast('↩ '+ub.cod);ultimoBipe=null;
-  if(ub.modo==='livre')renderLivre();else if(ub.modo==='diaria')renderDiaria();else if(ub.modo==='locacao')renderLocCont();
+  if(ub.modo==='livre')renderLivre();else if(ub.modo==='conferencia')renderConf();else if(ub.modo==='diaria')renderDiaria();else if(ub.modo==='locacao')renderLocCont();
 }
 
 // ===== RESET / BACKUP =====
