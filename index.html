@@ -714,17 +714,19 @@ function somAlerta(){somAlertaDuplo();if(navigator.vibrate)navigator.vibrate([15
 // ===== FOCUS HELPER =====
 // No iOS, .focus() programático move o foco mas NÃO abre teclado.
 // Teclado só abre com tap do usuário — comportamento correto para BT scanner.
-function safeFocus(el){if(!el)return;el.focus()}
+// safeFocus: só chama focus() se o elemento NÃO está focado.
+// Isso evita que focus() programático feche o teclado que o usuário abriu.
+function safeFocus(el){if(!el||document.activeElement===el)return;el.focus()}
 var _userTapping=false;
-document.addEventListener('touchstart',function(){_userTapping=true;setTimeout(function(){_userTapping=false},400)},{passive:true});
+// 800ms > 400ms dos blur handlers — garante que _userTapping vence a corrida
+document.addEventListener('touchstart',function(){_userTapping=true;setTimeout(function(){_userTapping=false},800)},{passive:true});
 // iOS: quando o input já tem foco programático, tap não abre teclado.
 // Solução: blur no touchstart + focus no touchend (dentro do gesto).
-// O touchend é reconhecido pelo iOS como user activation → abre teclado.
+var _kbForcing=false;
 function forceKeyboard(el){
-  var _kbTap=false;
-  el.addEventListener('touchstart',function(){_kbTap=true;el.blur()});
+  el.addEventListener('touchstart',function(){_kbForcing=true;el.blur()});
   el.addEventListener('touchend',function(e){
-    if(_kbTap){_kbTap=false;e.preventDefault();el.focus()}
+    if(_kbForcing){_kbForcing=false;e.preventDefault();el.focus()}
   });
 }
 forceKeyboard(document.getElementById('scanLivre'));
@@ -834,7 +836,7 @@ var scanLBlocked=false;
 scanL.addEventListener('blur',function(){
   if(!document.getElementById('scrLivre').classList.contains('active')||scanLBlocked)return;
   setTimeout(function(){
-    if(_userTapping||scanLBlocked)return;
+    if(_userTapping||_kbForcing||scanLBlocked)return;
     var af=document.activeElement;
     if(!af||af.id==='filtroLivre'||af.closest('.modal')||af.tagName==='SELECT'||af.tagName==='INPUT'&&af!==scanL)return;
     safeFocus(scanL);
@@ -916,7 +918,7 @@ var scanCBlocked=false;
 scanC.addEventListener('blur',function(){
   if(!document.getElementById('scrConf').classList.contains('active')||scanCBlocked)return;
   setTimeout(function(){
-    if(_userTapping||scanCBlocked)return;
+    if(_userTapping||_kbForcing||scanCBlocked)return;
     var af=document.activeElement;
     if(!af||af.id==='filtroConf'||af.closest('.modal')||af.tagName==='SELECT'||af.tagName==='INPUT'&&af!==scanC)return;
     safeFocus(scanC);
@@ -1143,7 +1145,7 @@ function renderDiaria(codDestaque){
 
 // Scanner diária
 var scanD=document.getElementById('scanDiaria'),timerD=null;
-scanD.addEventListener('blur',function(){if(!document.getElementById('scrDiaria').classList.contains('active'))return;setTimeout(function(){if(_userTapping||modalAberto)return;var af=document.activeElement;if(af&&(af.closest('.modal')||af.tagName==='SELECT'||(af.tagName==='INPUT'&&af!==scanD)))return;safeFocus(scanD)},400)});
+scanD.addEventListener('blur',function(){if(!document.getElementById('scrDiaria').classList.contains('active'))return;setTimeout(function(){if(_userTapping||_kbForcing||modalAberto)return;var af=document.activeElement;if(af&&(af.closest('.modal')||af.tagName==='SELECT'||(af.tagName==='INPUT'&&af!==scanD)))return;safeFocus(scanD)},400)});
 scanD.addEventListener('keydown',function(e){if(e.key==='Tab'||e.key==='Enter'){e.preventDefault();if(timerD){clearTimeout(timerD);timerD=null}bipeDiaria()}});
 scanD.addEventListener('input',function(){if(timerD)clearTimeout(timerD);if(scanD.value.trim().length>0)timerD=setTimeout(bipeDiaria,SCAN_DEBOUNCE)});
 
@@ -1578,7 +1580,7 @@ function renderLocCont(codDestaque){
 
 // Scanner locação
 var scanLC=document.getElementById('scanLoc'),timerLC=null;
-scanLC.addEventListener('blur',function(){if(!document.getElementById('scrLocCont').classList.contains('active'))return;setTimeout(function(){if(_userTapping||modalAberto)return;var af=document.activeElement;if(af&&(af.closest('.modal')||af.tagName==='SELECT'||(af.tagName==='INPUT'&&af!==scanLC)))return;safeFocus(scanLC)},400)});
+scanLC.addEventListener('blur',function(){if(!document.getElementById('scrLocCont').classList.contains('active'))return;setTimeout(function(){if(_userTapping||_kbForcing||modalAberto)return;var af=document.activeElement;if(af&&(af.closest('.modal')||af.tagName==='SELECT'||(af.tagName==='INPUT'&&af!==scanLC)))return;safeFocus(scanLC)},400)});
 scanLC.addEventListener('keydown',function(e){if(e.key==='Tab'||e.key==='Enter'){e.preventDefault();if(timerLC){clearTimeout(timerLC);timerLC=null}bipeLoc()}});
 scanLC.addEventListener('input',function(){if(timerLC)clearTimeout(timerLC);if(scanLC.value.trim().length>0)timerLC=setTimeout(bipeLoc,SCAN_DEBOUNCE)});
 
@@ -2130,7 +2132,7 @@ var scanRBlocked=false;
 scanR.addEventListener('blur',function(){
   if(!document.getElementById('scrRoupa').classList.contains('active')||scanRBlocked)return;
   setTimeout(function(){
-    if(_userTapping||modalAberto)return;
+    if(_userTapping||_kbForcing||modalAberto)return;
     var af=document.activeElement;
     if(scanRBlocked||!af||af.id==='filtroRoupa'||af.closest('.modal')||af.tagName==='SELECT'||af.tagName==='INPUT'&&af!==scanR)return;
     safeFocus(scanR);
