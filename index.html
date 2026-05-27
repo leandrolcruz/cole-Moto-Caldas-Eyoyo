@@ -710,8 +710,10 @@ function somAlertaDuplo(){var ctx=getAudioCtx();[0,0.2].forEach(function(d){var 
 function somErro(){var ctx=getAudioCtx();[0,0.25,0.5].forEach(function(d){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.value=200;g.gain.value=1.0;o.start(ctx.currentTime+d);o.frequency.exponentialRampToValueAtTime(100,ctx.currentTime+d+0.2);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d+0.2);o.stop(ctx.currentTime+d+0.2)});if(navigator.vibrate)navigator.vibrate([200,100,200,100,200])}
 function somAlerta(){somAlertaDuplo();if(navigator.vibrate)navigator.vibrate([150,100,150])}
 
-// ===== FOCUS HELPER (iOS-safe) =====
-function safeFocus(el){if(!el)return;if(isIOS){el.setAttribute('readonly','readonly');el.focus();setTimeout(function(){el.removeAttribute('readonly')},50)}else{el.focus()}}
+// ===== FOCUS HELPER =====
+// No iOS, .focus() programático move o foco mas NÃO abre teclado.
+// Teclado só abre com tap do usuário — comportamento correto para BT scanner.
+function safeFocus(el){if(!el)return;el.focus()}
 var _userTapping=false;
 document.addEventListener('touchstart',function(){_userTapping=true;setTimeout(function(){_userTapping=false},400)},{passive:true});
 
