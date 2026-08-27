@@ -1,4 +1,4 @@
-var CACHE_NAME = 'inv-motocaldas-v19';
+var CACHE_NAME = 'inv-motocaldas-v20';
 var urlsToCache = [
   './',
   './index.html',
