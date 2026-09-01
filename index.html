@@ -945,8 +945,7 @@ scanL.addEventListener('input',function(){if(timer)clearTimeout(timer);if(scanL.
 function bipeLivre(){
   if(cur===null)return;var c=db.c[cur];
   if(c.status==='ok'){toast('Contagem concluída');scanL.value='';return}
-  var cod=resolverAlias(scanL.value.replace(/[	
-]/g,'').trim());if(!cod)return;
+  var cod=resolverAlias(scanL.value.replace(/[\t\n\r]/g,'').trim());if(!cod)return;
   var fb=document.getElementById('fbLivre');
   if(codInvalido(cod)){fb.textContent='✗ Etiqueta fora do padrão: '+cod;fb.className='scan-fb';fb.style.color='var(--dg)';somErro();scanL.value='';safeFocus(scanL);setTimeout(function(){fb.style.color=''},3000);return}
   c.totalBipes++;
@@ -1027,8 +1026,7 @@ scanC.addEventListener('input',function(){if(timerC)clearTimeout(timerC);if(scan
 function bipeConf(){
   if(cur===null)return;var c=db.c[cur];
   if(c.status==='ok'){toast('Conferência concluída');scanC.value='';return}
-  var cod=resolverAlias(scanC.value.replace(/[	
-]/g,'').trim());if(!cod)return;
+  var cod=resolverAlias(scanC.value.replace(/[\t\n\r]/g,'').trim());if(!cod)return;
   var fb=document.getElementById('fbConf');
   if(codInvalido(cod)){fb.textContent='✗ Etiqueta fora do padrão: '+cod;fb.className='scan-fb';fb.style.color='var(--dg)';somErro();scanC.value='';safeFocus(scanC);setTimeout(function(){fb.style.color=''},3000);return}
   c.totalBipes++;
@@ -1244,8 +1242,7 @@ scanD.addEventListener('input',function(){if(timerD)clearTimeout(timerD);if(scan
 
 function bipeDiaria(){
   if(cur===null)return;var c=db.c[cur];
-  var cod=resolverAlias(scanD.value.replace(/[	
-]/g,'').trim());if(!cod)return;
+  var cod=resolverAlias(scanD.value.replace(/[\t\n\r]/g,'').trim());if(!cod)return;
   scanD.value='';var fb=document.getElementById('fbDiaria');
   if(codInvalido(cod)){fb.textContent='✗ Etiqueta fora do padrão: '+cod;fb.className='scan-fb';fb.style.color='var(--dg)';somErro();safeFocus(scanD);setTimeout(function(){fb.style.color=''},3000);return}
   c.totalBipes++;saveDB();
@@ -1707,8 +1704,7 @@ scanLC.addEventListener('input',function(){if(timerLC)clearTimeout(timerLC);if(s
 
 function bipeLoc(){
   if(cur===null)return;var c=db.c[cur];
-  var cod=resolverAlias(scanLC.value.replace(/[	
-]/g,'').trim());if(!cod)return;
+  var cod=resolverAlias(scanLC.value.replace(/[\t\n\r]/g,'').trim());if(!cod)return;
   scanLC.value='';var fb=document.getElementById('fbLoc');
   if(codInvalido(cod)){fb.textContent='✗ Etiqueta fora do padrão: '+cod;fb.className='scan-fb';fb.style.color='var(--dg)';somErro();showLocAlert('err','Etiqueta fora do padrão');setTimeout(function(){fb.style.color=''},3000);safeFocus(scanLC);return}
   c.totalBipes++;saveDB();
@@ -2388,8 +2384,7 @@ scanR.addEventListener('input',function(){if(timerR)clearTimeout(timerR);if(scan
 function bipeRoupa(){
   if(cur===null)return;var c=db.c[cur];
   if(c.status==='ok'){toast('Contagem concluída');scanR.value='';return}
-  var cod=resolverAlias(scanR.value.replace(/[	
-]/g,'').trim());if(!cod)return;
+  var cod=resolverAlias(scanR.value.replace(/[\t\n\r]/g,'').trim());if(!cod)return;
   scanR.value='';var fb=document.getElementById('fbRoupa');
   if(codInvalido(cod)){fb.textContent='✗ Etiqueta fora do padrão: '+cod;fb.className='scan-fb';fb.style.color='var(--dg)';somErro();safeFocus(scanR);setTimeout(function(){fb.style.color=''},3000);return}
   // Abrir modal para cor e tamanho
